@@ -14,9 +14,11 @@ import {
     sessionRelations,
     accountRelations
 } from "./db/schema/auth-schema";
+import {emailOTP} from "better-auth/dist/plugins";
 
 
 export const auth = betterAuth({
+    debug: true,
     siteUrl: "http://localhost:5173",
     trustedOrigins: ["http://localhost:5173"],
     database: drizzleAdapter(db, {
@@ -54,6 +56,41 @@ export const auth = betterAuth({
             clientId: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
             redirectUri: "http://localhost:5173",
+        },
+        facebook: {
+            clientId: process.env.FACEBOOK_CLIENT_ID as string,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
         }
-    }
+    },
+    callbacks: {
+        async createUser({ user, profile, account}) {
+            console.log("on passe la");
+            if (account?.provider === "facebook") {
+                const [firstName, ...rest] = (profile.name ?? "").split(" ");
+
+                return {
+                    ...user,
+                    first_name: profile.first_name ?? firstName ?? "test",
+                    last_name: profile.last_name ?? rest.join(" ") ?? "test",
+                };
+            }
+
+            return user;
+        }
+    },
+    plugins: [
+        emailOTP({
+            async sendVerificationOTP({ email, otp, type}) {
+                if (type === "sign-in"){
+
+                }
+                else if (type === "email-verification"){
+
+                }
+                else {
+
+                }
+            }
+        })
+    ]
 });

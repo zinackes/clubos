@@ -29,8 +29,8 @@ CREATE TABLE "session" (
 CREATE TABLE "user" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"first_name" text NOT NULL,
-	"last_name" text NOT NULL,
+	"first_name" text,
+	"last_name" text,
 	"email" text NOT NULL,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,

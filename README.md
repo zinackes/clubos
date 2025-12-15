@@ -37,9 +37,9 @@ This project uses [TanStack Router](https://tanstack.com/router). The initial se
 
 ### Adding A Route
 
-To add a new route to your application just add another a new file in the `./src/routes` directory.
+To add a new _auth to your application just add another a new file in the `./src/routes` directory.
 
-TanStack will automatically generate the content of the route file for you.
+TanStack will automatically generate the content of the _auth file for you.
 
 Now that you have two routes you can use a `Link` component to navigate between them.
 
@@ -57,13 +57,13 @@ Then anywhere in your JSX you can use it like so:
 <Link to="/about">About</Link>
 ```
 
-This will create a link that will navigate to the `/about` route.
+This will create a link that will navigate to the `/about` _auth.
 
 More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
 
 ### Using A Layout
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
+In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root _auth will appear in all the routes. The _auth content will appear in the JSX where you use the `<Outlet />` component.
 
 Here is an example layout that includes a header:
 
@@ -96,7 +96,7 @@ More information on layouts can be found in the [Layouts documentation](https://
 
 ## Data Fetching
 
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
+There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a _auth before it's rendered.
 
 For example:
 
@@ -129,7 +129,7 @@ Loaders simplify your data fetching logic dramatically. Check out more informati
 
 ### React-Query
 
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
+React-Query is an excellent addition or alternative to _auth loading and integrating it into you application is a breeze.
 
 First add your dependencies:
 
@@ -159,7 +159,7 @@ if (!rootElement.innerHTML) {
 }
 ```
 
-You can also add TanStack Query Devtools to the root route (optional).
+You can also add TanStack Query Devtools to the root _auth (optional).
 
 ```tsx
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
