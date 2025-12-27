@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {useForm} from "@tanstack/react-form";
 import {Input} from "@/components/ui/input.tsx";
 import {z} from "zod";
@@ -11,10 +11,11 @@ import {getFrenchTranslation} from "@/lib/translation.ts";
 import {Alert, AlertTitle} from "@/components/ui/alert.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {LoaderCircle} from "@/components/animate-ui/icons/loader-circle.tsx";
-import {GoogleAuth} from "@/components/ui/GoogleAuth.tsx";
-import {FacebookAuth} from "@/components/ui/FacebookAuth.tsx";
+import {GoogleAuth} from "@/components/ui/auth/GoogleAuth.tsx";
+import {FacebookAuth} from "@/components/ui/auth/FacebookAuth";
 import {Checkbox} from "@/components/ui/checkbox.tsx";
 import {Label} from "@/components/ui/label.tsx";
+import {toast} from "sonner";
 
 export const Route = createFileRoute('/_auth/login')({
   component: RouteComponent
@@ -24,6 +25,7 @@ function RouteComponent() {
     const [showPassword, setShowPassword] = useState(false);
     const [signInError, setSignInError] = useState("");
     const [isPending, setIsPending] = useState(false);
+    const navigate = useNavigate();
 
     const register = z.object({
         email: z.email("le mail est incorrect"),
@@ -45,14 +47,28 @@ function RouteComponent() {
                 email: values.value.email,
                 password: values.value.password,
                 rememberMe: values.value.rememberMe,
-            })
-            setIsPending(false);
+            }, {
+                onResponse: () => {
+                    setIsPending(false);
+                },
+                onRequest: () => {
+                    setIsPending(true);
+                },
+                onSuccess: () => {
+                    setSignInError("")
+                    navigate({ to: "/dashboard"});
+                },
+                onError: (ctx) => {
 
-            console.log(data);
-            console.log(error);
-            if(error){
-                setSignInError(getFrenchTranslation(error.code ?? ""))
-            }
+                    if (ctx.error.status === 403) {
+                        toast.error("Veuillez verifier votre adresse mail");
+                        setSignInError("Veuillez verifier votre adresse mail");
+                    }
+                    else{
+                        setSignInError(getFrenchTranslation(error.code ?? ""))
+                    }
+                }
+            })
 
         },
         validators: {

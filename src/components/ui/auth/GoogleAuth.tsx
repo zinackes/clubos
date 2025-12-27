@@ -13,6 +13,19 @@ export function GoogleAuth() {
         const data = await authClient.signIn.social({
             provider: "google",
             callbackURL: "http://localhost:5173"
+        }, {
+          onResponse: () => {
+
+          },
+          onRequest: () => {
+
+          },
+          onSuccess: () => {
+
+          },
+          onError: () => {
+
+          }
         })
 
         setIsPending(false);

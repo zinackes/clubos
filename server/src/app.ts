@@ -1,11 +1,19 @@
 import { Hono } from 'hono'
-
-const app = new Hono()
-import { serve } from "@hono/node-server";
-import {auth} from "./auth";
 import { cors } from 'hono/cors';
+import { auth } from "./auth";
+import { authRoutes } from "./routes/auth";
 
+// 1. On définit le type du contexte pour avoir l'autocomplétion sur c.get/c.set
+type Env = {
+    Variables: {
+        user: typeof auth.$Infer.Session.user | null;
+        session: typeof auth.$Infer.Session.session | null;
+    }
+}
 
+const app = new Hono<Env>()
+
+// 2. Les middlewares (ils ne sont pas inclus dans l'AppType du RPC, c'est normal)
 app.use(
     "*",
     cors({
@@ -21,42 +29,38 @@ app.use(
 app.use("*", async (c, next) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
-    if(!session) {
-        // @ts-ignore
+    if (!session) {
         c.set("user", null);
-        // @ts-ignore
         c.set("session", null);
-        await next();
-        return;
+    } else {
+        c.set("user", session.user);
+        c.set("session", session.session);
     }
-
-    // @ts-ignore
-    c.set("user", session.user);
-    // @ts-ignore
-    c.set("session", session.session);
     await next();
-})
-
-app.get("/session", (c) => {
-    // @ts-ignore
-    const session = c.get("session")
-    // @ts-ignore
-    const user = c.get("user")
-
-    if(!user) return c.body(null, 401);
-
-    return c.json({
-        session,
-        user
-    });
 });
+const routes = app
+    .get("/session", (c) => {
+        const session = c.get("session")
+        const user = c.get("user")
 
-app.get('/', (c) => {
-    return c.text('Hello Hono!')
-})
+        if (!user) {
+            return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        return c.json({
+            session,
+            user
+        });
+    })
+    .get('/hello', (c) => {
+        return c.json({ message: 'Hello Hono!' })
+    })
+    .route("/api/user-management", authRoutes);
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
     return auth.handler(c.req.raw);
 });
 
-export default app
+export type AppType = typeof routes;
+
+export default app;

@@ -4,6 +4,7 @@ import type {auth} from "../../server/src/auth.ts";
 
 export const authClient = createAuthClient({
     baseURL: "http://localhost:3000",
-    plugins: [inferAdditionalFields<typeof auth>(),
+    plugins: [
+        inferAdditionalFields<typeof auth>(),
         emailOTPClient()]
 })

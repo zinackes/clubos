@@ -10,6 +10,7 @@ import {
 } from '../../navigation-menu';
 import {cn} from "@/lib/utils.ts";
 import {Popover, PopoverContent, PopoverTrigger} from '../../popover';
+import {useNavigate} from "@tanstack/react-router";
 
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
@@ -101,9 +102,9 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       logo = <Logo />,
       logoHref = '#',
       navigationLinks = defaultNavigationLinks,
-      signInText = 'Sign In',
+      signInText = "S'inscrire",
       signInHref = '#signin',
-      ctaText = 'Get Started',
+      ctaText = 'Commencer',
       ctaHref = '#get-started',
       onSignInClick,
       onCtaClick,
@@ -113,6 +114,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
   ) => {
     const [isMobile, setIsMobile] = useState(false);
     const containerRef = useRef<HTMLElement>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
       const checkWidth = () => {
@@ -177,8 +179,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                           onClick={(e) => e.preventDefault()}
                           className={cn(
                             "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
-                            link.active 
-                              ? "bg-accent text-accent-foreground" 
+                            link.active
+                              ? "bg-accent text-accent-foreground"
                               : "text-foreground/80"
                           )}
                         >
@@ -193,7 +195,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
             )}
             {/* Main nav */}
             <div className="flex items-center gap-6">
-              <button 
+              <button
                 onClick={(e) => e.preventDefault()}
                 className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
               >
@@ -212,8 +214,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                         onClick={(e) => e.preventDefault()}
                         className={cn(
                           "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer no-underline",
-                          link.active 
-                            ? "bg-accent text-accent-foreground" 
+                          link.active
+                            ? "bg-accent text-accent-foreground"
                             : "text-foreground/80 hover:text-foreground"
                         )}
                       >
@@ -232,9 +234,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
               variant="ghost"
               size="sm"
               className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-              onClick={(e: any) => {
-                e.preventDefault();
-                if (onSignInClick) onSignInClick();
+              onClick={() => {
+                navigate({to: "/signup"})
               }}
             >
               {signInText}
@@ -242,9 +243,8 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
             <Button
               size="sm"
               className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
-              onClick={(e: any) => {
-                e.preventDefault();
-                if (onCtaClick) onCtaClick();
+              onClick={() => {
+                navigate({to: "/login"})
               }}
             >
               {ctaText}
