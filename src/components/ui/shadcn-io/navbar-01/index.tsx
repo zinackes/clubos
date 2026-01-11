@@ -10,7 +10,8 @@ import {
 } from '../../navigation-menu';
 import {cn} from "@/lib/utils.ts";
 import {Popover, PopoverContent, PopoverTrigger} from '../../popover';
-import {useNavigate} from "@tanstack/react-router";
+import {Route, useNavigate} from "@tanstack/react-router";
+import type { authClient } from '@/lib/auth-client';
 
 // Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
@@ -85,6 +86,7 @@ export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
   ctaHref?: string;
   onSignInClick?: () => void;
   onCtaClick?: () => void;
+  auth: typeof authClient.$Infer.Session | null;
 }
 
 // Default navigation links
@@ -108,6 +110,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
       ctaHref = '#get-started',
       onSignInClick,
       onCtaClick,
+      auth,
       ...props
     },
     ref
@@ -115,6 +118,9 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
     const [isMobile, setIsMobile] = useState(false);
     const containerRef = useRef<HTMLElement>(null);
     const navigate = useNavigate();
+    
+    
+    console.log(auth);
 
     useEffect(() => {
       const checkWidth = () => {
@@ -229,26 +235,42 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
             </div>
           </div>
           {/* Right side */}
+          
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-              onClick={() => {
-                navigate({to: "/signup"})
-              }}
-            >
-              {signInText}
-            </Button>
-            <Button
-              size="sm"
-              className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
-              onClick={() => {
-                navigate({to: "/login"})
-              }}
-            >
-              {ctaText}
-            </Button>
+            {auth ? (
+              <Button
+                size="sm"
+                variant="default"
+                className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                onClick={() => {
+                  navigate({ to: "/dashboard" })
+                }}
+              >
+                Accéder au Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => {
+                    navigate({ to: "/signup" })
+                  }}
+                >
+                  {signInText}
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                  onClick={() => {
+                    navigate({ to: "/login" })
+                  }}
+                >
+                  {ctaText}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>

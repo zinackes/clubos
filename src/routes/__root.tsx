@@ -1,8 +1,9 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet, createRootRoute, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import type { contextRouter } from '@/main'
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<contextRouter>()({
   component: () => (
     <>
       <Outlet />

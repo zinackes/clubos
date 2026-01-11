@@ -1,0 +1,1 @@
+CREATE TYPE "public"."field_type_enum" AS ENUM('text', 'integer', 'boolean');

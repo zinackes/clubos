@@ -15,12 +15,20 @@ import {
   accountRelations,
 } from "./db/schema";
 import { resend } from "./helpers/email";
-import { emailOTP } from "better-auth/plugins";
+import { customSession, emailOTP } from "better-auth/plugins";
+import { userRole } from "@db/schema/user-role";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   debug: true,
   siteUrl: "http://localhost:5173",
   trustedOrigins: ["http://localhost:5173"],
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 3600 * 24,
+    }
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -104,6 +112,15 @@ export const auth = betterAuth({
         }
       },
     }),
+    customSession(async ({ user, session}) => {
+      const roles = await db.select().from(userRole).where(eq(userRole.userId, session.userId));
+      
+      return {
+          roles: roles ?? [],
+          user,
+          session
+      }
+    })
   ],
 });
 

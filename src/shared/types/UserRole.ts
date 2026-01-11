@@ -11,5 +11,11 @@ export const roleEnumValidator = z.enum(
   "Le rôle sélectionné est invalide"
 );
 
+export interface userRoleType {
+  id: string,
+  role: roleEnum | null,
+  userId: string,
+}
+
 export type roleEnum = z.infer<typeof roleEnumValidator>;
 export type UserRole = z.infer<typeof userRoleValidator>;

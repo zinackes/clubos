@@ -124,7 +124,7 @@ function RouteComponent() {
           },
           onSuccess: () => {
             toast.success("Votre compte à bien été crée !");
-            //navigate({ to: "/login"});
+            navigate({ to: "/login"});
           },
           onError: (ctx) => {
             if (ctx.error.status === 403) {

@@ -7,7 +7,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
 
-    "composite": true,
+    "composite": false,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -25,12 +25,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@server": ["./server"]
+      "@server/*": ["./server/src/*"]
     }
   },
-  "references": [
-    { "path": "./server" }
-  ],
   "workspaces": [
     ".",
     "server"

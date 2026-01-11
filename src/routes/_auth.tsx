@@ -8,10 +8,13 @@ export const Route = createFileRoute("/_auth")({
 
 export default function AuthLayout() {
     const { location } = useRouterState()
+    
+    
+    const { auth } = Route.useRouteContext();
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Navbar01></Navbar01>
+            <Navbar01 auth={auth}></Navbar01>
             <div className="w-full h-full flex-1 flex transition-none">
               <Outlet />
             </div>
