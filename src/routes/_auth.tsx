@@ -1,9 +1,17 @@
-import { createRootRoute, Outlet, useRouterState, createFileRoute } from "@tanstack/react-router"
+import { createRootRoute, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router"
 import { AnimatePresence, motion } from "framer-motion"
 import {Navbar01} from "@/components/ui/shadcn-io/navbar-01";
 
 export const Route = createFileRoute("/_auth")({
     component: AuthLayout,
+    beforeLoad: ({ context, location}) => {
+        if(context.auth){
+        console.log(location);
+        throw redirect({
+                to: '/dashboard',
+                });
+        }
+    }
 })
 
 export default function AuthLayout() {

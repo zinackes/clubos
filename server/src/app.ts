@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors';
 import { auth } from "./auth";
 import { authRoutes } from "./routes/auth";
+import { clubRoutes } from './routes/club';
 
 // 1. On définit le type du contexte pour avoir l'autocomplétion sur c.get/c.set
 type Env = {
@@ -55,7 +56,8 @@ const routes = app
     .get('/hello', (c) => {
         return c.json({ message: 'Hello Hono!' })
     })
-    .route("/api/user-management", authRoutes);
+    .route("/api/user-management", authRoutes)
+    .route("/api/club", clubRoutes);
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
     return auth.handler(c.req.raw);

@@ -2,11 +2,9 @@ import { boolean, index, pgEnum, pgSchema, pgTable, text, timestamp } from "driz
 import { timestamps } from "../../utils/timestamps";
 import { user } from "./user-schema";
 
-export const clubSchema = pgSchema("club");
+export const fieldTypeEnum = pgEnum("field_type_enum", ["text", "email", "boolean", "phone_number", "date", "integer", "file"]);
 
-export const fieldTypeEnum = pgEnum("field_type_enum", ["text", "integer", "boolean"]);
-
-export const clubTable = clubSchema.table(
+export const clubTable = pgTable(
   "club",
   {
     id: text("id").primaryKey()
@@ -23,31 +21,28 @@ export const clubTable = clubSchema.table(
     city: text("city").notNull(),
     phone_number: text("phone_number").notNull(),
     website: text("website"),
-    headquarters_address: text("headquarters_address"),
+    address: text("address"),
     logo_url: text("logo_url"),
-    main_color: text("main_color"),
-    secondary_color: text("secondary_color"),
-    typography: text("typography"),
-    button_radius: text("button_radius"),
     ...timestamps
   },
   (table) => [index("club_directorId_idx").on(table.directorId)],
 )
 
-export const customFieldClub = clubSchema.table(
+export const customFieldClub = pgTable(
   "custom_field_club",
   {
     id: text("id").primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     field: text("field").notNull(),
-    type: fieldTypeEnum("type"),
+    type: fieldTypeEnum("type").notNull(),
+    required: boolean("required").notNull().default(false),
     clubId: text("club_id").notNull().references(() => clubTable.id, { onDelete: "cascade"}),
     ...timestamps
   },
   (table) => [index("customFieldClub_clubId_idx").on(table.clubId)],
 )
 
-export const clubSeason = clubSchema.table(
+export const clubSeason = pgTable(
   "club_season",
   {
     id: text("id").primaryKey()

@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { clubValidator } from '@/shared/types/Club'
+import { clubValidator, type clubDbType, type clubType } from '@/shared/types/Club'
 import { useForm } from '@tanstack/react-form'
-import { createFileRoute } from '@tanstack/react-router'
-import { Quote, Building2, Palette, CheckCircle, LayoutPanelTop, FileText, Calendar, ArrowRightIcon } from 'lucide-react'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { Quote, Building2, Palette, CheckCircle, LayoutPanelTop, FileText, Calendar, ArrowRightIcon, AlertCircleIcon } from 'lucide-react'
 import type z from 'zod'
 import Stepper, { type StepType } from '@/components/ui/stepper'
 import { useState } from 'react'
@@ -23,14 +23,34 @@ import ClubMembershipStep from '@/components/club-form/ClubMembershipStep'
 import ClubSeasonStep from '@/components/club-form/ClubSeasonStep'
 import ClubValidationStep from '@/components/club-form/ClubValidationStep'
 import { toast } from 'sonner'
+import { useCreateClub } from '@/hooks/requests/useCreateClub'
+import { Alert, AlertTitle } from '@/components/ui/alert'
+import { LoaderCircle } from '@/components/animate-ui/icons/loader-circle'
+import type { ApiResponseSuccess } from '@/shared/types/ApiResponse'
 
 
-export const Route = createFileRoute('/create/club')({
+export const Route = createFileRoute('/club/create')({
   component: RouteComponent,
+  beforeLoad: ({ context, location}) => {
+    if(!context.auth){
+      throw redirect({
+              to: '/login',
+              search: {
+                redirect: location.href,
+              },
+            });
+    }
+  }
 })
 
 function RouteComponent() {
   type ClubFormValues = z.infer<typeof clubValidator>;
+
+  const { auth } = Route.useRouteContext();
+
+  const navigate = useNavigate();
+
+  const {mutate} = useCreateClub();
   
   const steps: StepType[] = [
     {
@@ -59,10 +79,30 @@ function RouteComponent() {
       icon: CheckCircle,
     },
   ];
+
   
+  const fieldToStepMap: Record<string, string> = {
+    name: "step-1",
+    slug: "step-1",
+    category: "step-1",
+    privateEmail: "step-1",
+    isPublic: "step-1",
+    publicEmail: "step-2",
+    phoneNumber: "step-2",
+    city: "step-2",
+    address: "step-2",
+    description: "step-2",
+    website: "step-2",
+    seasonStartDate: "step-4",
+    seasonEndDate: "step-4",
+    seasonName: "step-4",
+  };
+    
   const stepKeys = ["step-1", "step-2", "step-3", "step-4", "step-5"];
   const [currentStep, setCurrentStep] = useState(stepKeys[0]);
   const [currentStepIndex, setCurrentStepIndex] = useState(1);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   const form = useForm({
     defaultValues: {
@@ -74,23 +114,72 @@ function RouteComponent() {
       description: null,
       isPublic: true,
       publicEmail: "",
-      privateEmail: null,
+      privateEmail: auth?.user.email ?? "",
       city: "",
       phoneNumber: "",
       website: "",
-      headquarters_address: null,
+      address: null,
+      logo_file: null,
       logo_url: "",
       seasonName: "",
       seasonStartDate: "",
       seasonEndDate: "",
-    } as ClubFormValues & {
-      seasonName?: string;
-      seasonStartDate?: string;
-      seasonEndDate?: string;
-    },
-    onSubmit: async (values) => {
-      console.log("Form submitted:", values);
-      toast.success("Club créé avec succès !");
+      customFields: []
+    } as ClubFormValues,
+    onSubmit: async ({ value }) => {
+      const userId = auth?.user.id;
+    
+      if (!userId) {
+        toast.error("Erreur : Vous devez être connecté pour créer un club.");
+        return;
+      }
+    
+      value.directorId = userId;
+    
+      console.log("Form submitted:", value);
+
+      setIsLoading(true);
+
+      mutate(value, {
+        onSuccess: (data: ApiResponseSuccess<clubDbType>) => {
+          console.log(data);
+          const club_id = data.data.id;
+        
+          navigate({
+            to: '/club/dashboard/$club_id', 
+            params: {
+              club_id: club_id,
+            },
+          });
+        },
+        onError: (error: any) => {
+          console.log(error);
+          setValidationError(error.error);
+          if(error.errorField){
+            const fieldName = error.errorField as any;
+
+            form.setFieldMeta(fieldName, (prev) => ({
+              ...prev,
+              isTouched: true,
+              errorMap: {
+                onChange: error.error, 
+              },
+            }));
+
+            console.log(form.state.fieldMeta);
+
+            const targetStep = fieldToStepMap[error.errorField];
+            if(targetStep){
+              setCurrentStep(targetStep);
+              toast.error(`Erreur dans l'onglet ${targetStep}: ${error.error}`);
+            }
+          }
+        },
+        onSettled: () => {
+          setIsLoading(false);
+          setValidationError(null);
+        }
+      });
     },
     validators: {
       onChange: clubValidator,
@@ -102,19 +191,26 @@ function RouteComponent() {
       case "step-1":
         return await validateFormFields(
           form,
-          ["name", "slug", "category"]
+          ["name", "slug", "category", "privateEmail", "isPublic"]
         );
       case "step-2":
         return await validateFormFields(
           form,
-          ["city", "phoneNumber", "publicEmail", "isPublic"]
+          ["city", "phoneNumber", "publicEmail"]
         );
       case "step-3":
-        // Pas de validation obligatoire pour la personnalisation
+        const customFields = form.state.values.customFields;
+
+        if (customFields && customFields.length > 0) {
+          return customFields.every(field => field.label.trim() !== "");
+        }
+        
         return true;
       case "step-4":
-        // Pas de validation pour les adhésions (placeholder)
-        return true;
+        return await validateFormFields(
+          form,
+          ["seasonStartDate", "seasonEndDate"]
+        );
       case "step-5":
         const allFields: (keyof ClubFormValues)[] = [
           "name", "slug", "category", "city", "phoneNumber", "publicEmail"
@@ -269,38 +365,36 @@ function RouteComponent() {
                       <div className="flex gap-4 mt-8">
                         <MultiStepPrev className="py-5 flex-1">Retour</MultiStepPrev>
                         <Button
-  onClick={async (e) => {
-    console.log("--- DEBUG SUBMIT ---");
-    console.log("Valeurs actuelles :", form.state.values);
+                          onClick={async (e) => {
 
-    try {
-      // 1. On teste manuellement le schéma Zod pour voir s'il bloque
-      // Remplace 'clubValidator' par le nom de ton schéma importé
-      const result = clubValidator.safeParse(form.state.values);
-      
-      if (!result.success) {
-        console.error("❌ ZOD REJETTE LE FORMULAIRE :", result.error.format());
-        toast.error("Zod bloque la soumission. Regarde la console.");
-      } else {
-        console.log("✅ ZOD EST OK. Le problème vient du handleSubmit de TanStack.");
-      }
+                            try {
+                              console.log(form.state);
+                              await form.handleSubmit();
+                              
 
-      // 2. On tente le handleSubmit
-      await form.handleSubmit();
-      
-      // 3. On inspecte les erreurs enregistrées dans le state du form
-      console.log("État des erreurs TanStack :", form.state.fieldMeta);
-
-    } catch (err) {
-      console.error("🔥 CRASH DURANT LE SUBMIT :", err);
-    }
-  }}
-  type="submit"
-  className="py-5 flex-1"
->
-  Créer le club
-</Button>
+                            } catch (err) {
+                              console.error("🔥 CRASH DURANT LE SUBMIT :", err);
+                            }
+                          }}
+                          type="submit"
+                          className="py-5 flex-1"
+                        >
+                          {isLoading ? (
+                            <LoaderCircle animate={true} />
+                          ) : (
+                            <>
+                              Créer le club
+                            </>
+                          )}
+                        </Button>
                       </div>
+                      
+                      {validationError && (
+                        <Alert variant={"destructive"}>
+                          <AlertCircleIcon />
+                          <AlertTitle>{validationError}</AlertTitle>
+                        </Alert>
+                      )}
                     </MultiStepContent>
                   </MultiStepsContents>
                 </MultiSteps>

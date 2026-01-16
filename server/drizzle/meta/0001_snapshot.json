@@ -1,6 +1,6 @@
 {
-  "id": "ea3a91eb-6c0f-47e2-8efb-43c7f98aa019",
-  "prevId": "e3bd6862-1674-40ff-9a7a-2ee344da6050",
+  "id": "3ce67e63-b4db-438b-83bb-70a38eab23c4",
+  "prevId": "4b5f85bc-99ac-4366-8674-aa7a747951f8",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -126,9 +126,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "club.club_season": {
+    "public.club_season": {
       "name": "club_season",
-      "schema": "club",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
@@ -160,14 +160,15 @@
           "primaryKey": false,
           "notNull": true
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -196,7 +197,6 @@
           "name": "club_season_club_id_club_id_fk",
           "tableFrom": "club_season",
           "tableTo": "club",
-          "schemaTo": "club",
           "columnsFrom": [
             "club_id"
           ],
@@ -213,9 +213,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "club.club": {
+    "public.club": {
       "name": "club",
-      "schema": "club",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
@@ -259,6 +259,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "is_public": {
+          "name": "is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
         "public_email": {
           "name": "public_email",
           "type": "text",
@@ -289,8 +295,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "headquarters_address": {
-          "name": "headquarters_address",
+        "address": {
+          "name": "address",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -301,38 +307,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "main_color": {
-          "name": "main_color",
-          "type": "text",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
-        },
-        "secondary_color": {
-          "name": "secondary_color",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "typography": {
-          "name": "typography",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "button_radius": {
-          "name": "button_radius",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -399,9 +382,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "club.custom_field_club": {
+    "public.custom_field_club": {
       "name": "custom_field_club",
-      "schema": "club",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
@@ -420,7 +403,14 @@
           "type": "field_type_enum",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "required": {
+          "name": "required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "club_id": {
           "name": "club_id",
@@ -428,14 +418,15 @@
           "primaryKey": false,
           "notNull": true
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -464,7 +455,6 @@
           "name": "custom_field_club_club_id_club_id_fk",
           "tableFrom": "custom_field_club",
           "tableTo": "club",
-          "schemaTo": "club",
           "columnsFrom": [
             "club_id"
           ],
@@ -775,6 +765,19 @@
     }
   },
   "enums": {
+    "public.field_type_enum": {
+      "name": "field_type_enum",
+      "schema": "public",
+      "values": [
+        "text",
+        "email",
+        "boolean",
+        "phone_number",
+        "date",
+        "integer",
+        "file"
+      ]
+    },
     "public.user_role_enum": {
       "name": "user_role_enum",
       "schema": "public",

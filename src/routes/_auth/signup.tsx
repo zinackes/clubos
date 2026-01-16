@@ -80,6 +80,7 @@ function RouteComponent() {
     });
 
   const { mutate, error} =  useAddRoles();
+  const navigate = useNavigate();
 
   const form = useForm({
     defaultValues: {

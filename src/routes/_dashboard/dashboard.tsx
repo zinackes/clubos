@@ -18,7 +18,7 @@ function RouteComponent() {
         </h1>
         <div>
           <Button variant="outline" onClick={() => {
-            navigate({ to : "/create/club"})
+            navigate({ to : "/club/create"})
           }}>
             <Plus/>
               Créer un club
