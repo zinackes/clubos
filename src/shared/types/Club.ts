@@ -1,3 +1,4 @@
+import type { TrendType } from "@server/utils/math";
 import z from "zod";
 
 
@@ -100,3 +101,17 @@ export type CustomFieldDbType = {
   createdAt: Date,
   updatedAt: Date
 }
+
+export type clubStatsType = {
+  data: {
+    totalMembers: {
+      total: number;
+    } & TrendType;
+    totalRevenue: {
+      total: number;
+    } & TrendType;
+    pendingDocs: {
+      total: number;
+    } & TrendType;
+  }
+};

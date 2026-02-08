@@ -9,25 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClubRouteImport } from './routes/club'
-import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardClubsRouteImport } from './routes/dashboard/clubs'
 import { Route as ClubDashboardRouteImport } from './routes/club/dashboard'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
-import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as ClubDashboardClub_idRouteImport } from './routes/club/dashboard/$club_id'
 import { Route as ClubDashboardClub_idIndexRouteImport } from './routes/club/dashboard/$club_id/index'
+import { Route as ClubDashboardClub_idInvitation_codeRouteImport } from './routes/club/dashboard/$club_id/invitation_code'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClubRoute = ClubRouteImport.update({
   id: '/club',
   path: '/club',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -39,6 +42,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardClubsRoute = DashboardClubsRouteImport.update({
+  id: '/clubs',
+  path: '/clubs',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const ClubDashboardRoute = ClubDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -48,11 +61,6 @@ const ClubCreateRoute = ClubCreateRouteImport.update({
   id: '/create',
   path: '/create',
   getParentRoute: () => ClubRoute,
-} as any)
-const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => DashboardRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
@@ -75,16 +83,25 @@ const ClubDashboardClub_idIndexRoute =
     path: '/',
     getParentRoute: () => ClubDashboardClub_idRoute,
   } as any)
+const ClubDashboardClub_idInvitation_codeRoute =
+  ClubDashboardClub_idInvitation_codeRouteImport.update({
+    id: '/invitation_code',
+    path: '/invitation_code',
+    getParentRoute: () => ClubDashboardClub_idRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/club': typeof ClubRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
-  '/dashboard': typeof DashboardDashboardRoute
   '/club/create': typeof ClubCreateRoute
   '/club/dashboard': typeof ClubDashboardRouteWithChildren
+  '/dashboard/clubs': typeof DashboardClubsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/club/dashboard/$club_id': typeof ClubDashboardClub_idRouteWithChildren
+  '/club/dashboard/$club_id/invitation_code': typeof ClubDashboardClub_idInvitation_codeRoute
   '/club/dashboard/$club_id/': typeof ClubDashboardClub_idIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,23 +109,27 @@ export interface FileRoutesByTo {
   '/club': typeof ClubRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
-  '/dashboard': typeof DashboardDashboardRoute
   '/club/create': typeof ClubCreateRoute
   '/club/dashboard': typeof ClubDashboardRouteWithChildren
+  '/dashboard/clubs': typeof DashboardClubsRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/club/dashboard/$club_id/invitation_code': typeof ClubDashboardClub_idInvitation_codeRoute
   '/club/dashboard/$club_id': typeof ClubDashboardClub_idIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
-  '/_dashboard': typeof DashboardRouteWithChildren
   '/club': typeof ClubRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
-  '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/club/create': typeof ClubCreateRoute
   '/club/dashboard': typeof ClubDashboardRouteWithChildren
+  '/dashboard/clubs': typeof DashboardClubsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/club/dashboard/$club_id': typeof ClubDashboardClub_idRouteWithChildren
+  '/club/dashboard/$club_id/invitation_code': typeof ClubDashboardClub_idInvitation_codeRoute
   '/club/dashboard/$club_id/': typeof ClubDashboardClub_idIndexRoute
 }
 export interface FileRouteTypes {
@@ -116,12 +137,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/club'
+    | '/dashboard'
     | '/login'
     | '/signup'
-    | '/dashboard'
     | '/club/create'
     | '/club/dashboard'
+    | '/dashboard/clubs'
+    | '/dashboard/'
     | '/club/dashboard/$club_id'
+    | '/club/dashboard/$club_id/invitation_code'
     | '/club/dashboard/$club_id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -129,46 +153,50 @@ export interface FileRouteTypes {
     | '/club'
     | '/login'
     | '/signup'
-    | '/dashboard'
     | '/club/create'
     | '/club/dashboard'
+    | '/dashboard/clubs'
+    | '/dashboard'
+    | '/club/dashboard/$club_id/invitation_code'
     | '/club/dashboard/$club_id'
   id:
     | '__root__'
     | '/'
     | '/_auth'
-    | '/_dashboard'
     | '/club'
+    | '/dashboard'
     | '/_auth/login'
     | '/_auth/signup'
-    | '/_dashboard/dashboard'
     | '/club/create'
     | '/club/dashboard'
+    | '/dashboard/clubs'
+    | '/dashboard/'
     | '/club/dashboard/$club_id'
+    | '/club/dashboard/$club_id/invitation_code'
     | '/club/dashboard/$club_id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
-  DashboardRoute: typeof DashboardRouteWithChildren
   ClubRoute: typeof ClubRouteWithChildren
+  DashboardRoute: typeof DashboardRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/club': {
       id: '/club'
       path: '/club'
       fullPath: '/club'
       preLoaderRoute: typeof ClubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_dashboard': {
-      id: '/_dashboard'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -185,6 +213,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/clubs': {
+      id: '/dashboard/clubs'
+      path: '/clubs'
+      fullPath: '/dashboard/clubs'
+      preLoaderRoute: typeof DashboardClubsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/club/dashboard': {
       id: '/club/dashboard'
       path: '/dashboard'
@@ -198,13 +240,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/club/create'
       preLoaderRoute: typeof ClubCreateRouteImport
       parentRoute: typeof ClubRoute
-    }
-    '/_dashboard/dashboard': {
-      id: '/_dashboard/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardDashboardRouteImport
-      parentRoute: typeof DashboardRoute
     }
     '/_auth/signup': {
       id: '/_auth/signup'
@@ -234,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubDashboardClub_idIndexRouteImport
       parentRoute: typeof ClubDashboardClub_idRoute
     }
+    '/club/dashboard/$club_id/invitation_code': {
+      id: '/club/dashboard/$club_id/invitation_code'
+      path: '/invitation_code'
+      fullPath: '/club/dashboard/$club_id/invitation_code'
+      preLoaderRoute: typeof ClubDashboardClub_idInvitation_codeRouteImport
+      parentRoute: typeof ClubDashboardClub_idRoute
+    }
   }
 }
 
@@ -249,23 +291,14 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface DashboardRouteChildren {
-  DashboardDashboardRoute: typeof DashboardDashboardRoute
-}
-
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardDashboardRoute: DashboardDashboardRoute,
-}
-
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
-
 interface ClubDashboardClub_idRouteChildren {
+  ClubDashboardClub_idInvitation_codeRoute: typeof ClubDashboardClub_idInvitation_codeRoute
   ClubDashboardClub_idIndexRoute: typeof ClubDashboardClub_idIndexRoute
 }
 
 const ClubDashboardClub_idRouteChildren: ClubDashboardClub_idRouteChildren = {
+  ClubDashboardClub_idInvitation_codeRoute:
+    ClubDashboardClub_idInvitation_codeRoute,
   ClubDashboardClub_idIndexRoute: ClubDashboardClub_idIndexRoute,
 }
 
@@ -296,11 +329,25 @@ const ClubRouteChildren: ClubRouteChildren = {
 
 const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
 
+interface DashboardRouteChildren {
+  DashboardClubsRoute: typeof DashboardClubsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardClubsRoute: DashboardClubsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
-  DashboardRoute: DashboardRouteWithChildren,
   ClubRoute: ClubRouteWithChildren,
+  DashboardRoute: DashboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

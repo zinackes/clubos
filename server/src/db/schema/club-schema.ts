@@ -1,4 +1,4 @@
-import { boolean, index, pgEnum, pgSchema, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgSchema, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { timestamps } from "../../utils/timestamps";
 import { user } from "./user-schema";
 
@@ -54,4 +54,26 @@ export const clubSeason = pgTable(
     ...timestamps
   },
   (table) => [index("clubSeason_clubId_idx").on(table.clubId)]
+)
+
+
+export const clubInvitationLinkTable = pgTable(
+  "club_invitation_link",
+  {
+    id: text("id").primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    label: text("label").notNull(),
+    preassigned_team_id: text("preassigned_team_id"),
+    expiry_date: timestamp("expiry_date"),
+    max_uses: integer("max_uses"),
+    uses: integer("uses").notNull().default(0),
+    is_active: boolean("is_active").notNull().default(true),
+    is_deleted: boolean("is_deleted").notNull().default(false),
+    is_expired: boolean("is_expired").notNull().default(false),
+    is_used: boolean("is_used").notNull().default(false),
+    code: text("code"),
+    clubId: text("club_id").notNull().references(() => clubTable.id, { onDelete: "cascade"}),
+    ...timestamps
+  },
+  (table) => [index("clubInvitationLink_clubId_idx").on(table.clubId)]
 )

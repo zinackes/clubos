@@ -1,5 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/animate-ui/components/radix/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import Notification from '@/components/ui/notification'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -16,6 +17,7 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar'
 import { TeamSwitcher } from '@/components/ui/team-switcher'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { clubQueryOptions } from '@/hooks/queries/club-queries'
 import { authClient } from '@/lib/auth-client'
 import { hasUserPermission } from '@/lib/permissions'
@@ -23,7 +25,7 @@ import type { clubDbType } from '@/shared/types/Club'
 import type { userRoleType } from '@/shared/types/UserRole'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, Outlet, redirect, Router, useNavigate, useParams } from '@tanstack/react-router'
-import { AudioWaveform, Baby, Building2, Calendar, Calendars, Command, CreditCard, FileText, GalleryVerticalEnd, House, LifeBuoy, LogOut, Settings, Shield, Trophy, User, Users } from 'lucide-react'
+import { ArrowLeft, AudioWaveform, Baby, Building2, Calendar, Calendars, Command, CreditCard, FileText, GalleryVerticalEnd, House, LifeBuoy, LogOut, QrCode, Settings, Shield, Trophy, User, Users } from 'lucide-react'
 
 export const Route = createFileRoute('/club/dashboard')({
   component: RouteComponent,
@@ -32,6 +34,7 @@ export const Route = createFileRoute('/club/dashboard')({
 function RouteComponent() {
   
   const { auth } = Route.useRouteContext();
+  const navigate = useNavigate();
   
   
   const { club_id } = useParams({ strict: false});
@@ -55,14 +58,22 @@ function RouteComponent() {
   ]
   
   const userRoles: userRoleType[] = auth?.roles ?? [];
-  
-  
-  const navigate = useNavigate();
+
   
   return (
       <SidebarProvider>
       <Sidebar variant='inset' className='font-base'>
-        <SidebarHeader>
+        <SidebarHeader className='flex-row items-center'>
+          <Tooltip>
+            <TooltipTrigger>
+              <Button variant={"ghost"} onClick={() => navigate({ to: "/dashboard"})}>
+                <ArrowLeft/>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>Revenir au dashboard global</p>
+            </TooltipContent>
+          </Tooltip>
           <TeamSwitcher teams={teams} />
         </SidebarHeader>
         <SidebarContent>
@@ -74,7 +85,8 @@ function RouteComponent() {
               <SidebarMenuItem className='space-y-1'>
                 <SidebarMenuButton asChild>
                   <Link
-                    to="/dashboard"
+                    to="/club/dashboard/$club_id"
+                    params={{ club_id: club_id || '' }}
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}>
                     <House/>
                     <span>Accueil</span>
@@ -180,6 +192,15 @@ function RouteComponent() {
                       activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}>
                       <Shield/>
                       <span>Documents Admin</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  <SidebarMenuButton asChild>
+                    <Link
+                      to="/club/dashboard/$club_id/invitation_code"
+                      params={{ club_id: club_id || '' }}
+                      activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}>
+                      <QrCode/>
+                      <span>Codes d'invitation</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '..';
 import { user } from '../db/schema/user-schema';
-import { eq } from 'drizzle-orm';
+import { and, count, eq, gte, lte, sql, sum } from 'drizzle-orm';
 import { zValidator } from '@hono/zod-validator';
 import { userRoleValidator, roleEnum } from "@shared/types/UserRole";
 import { userRole } from '../db/schema';
@@ -9,6 +9,9 @@ import { clubDbType, clubValidator, CustomFieldDbType } from '@shared/types/Club
 import { clubTable, customFieldClub } from '@db/schema/club-schema';
 import { createClient } from '@supabase/supabase-js';
 import { ApiResponseError, ApiResponseSuccess } from '@shared/types/ApiResponse';
+import { memberClubTable, memberDocumentTable, memberPaymentTable } from '@db/schema/member-club-schema';
+import z, { number } from 'zod';
+import { calculateTrend } from 'src/utils/math';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -108,7 +111,7 @@ export const clubRoutes = new Hono()
 
   if(!clubs) return c.json({ error: "Aucun club trouvé pour l'utilisateur"} satisfies ApiResponseError, 404);
 
-  return c.json(clubs);
+  return c.json({data: clubs} satisfies ApiResponseSuccess<clubDbType[]>, 200);
 
 })
 .get("/get/:club_id", async(c) => {
@@ -121,7 +124,87 @@ export const clubRoutes = new Hono()
   if(!club) return c.json({ error: 'Aucun club trouvé pour cet id'} satisfies ApiResponseError, 404);
 
   return c.json({ data: club} satisfies ApiResponseSuccess<clubDbType>, 200);
-
 })
+.get("/get/statistics/:club_id", 
+  zValidator(
+    "query",
+    z.object({
+      beginDate: z.string(),
+      endDate: z.string(),
+      seasonId: z.string().optional(),
+      comparisonType: z.string(),
+    })
+  ),
+  async (c) => {
+    const club_id = c.req.param("club_id");
+    const { beginDate, endDate, seasonId, comparisonType } = c.req.valid("query");
+
+    const startOfDay = new Date(beginDate);
+    const endOfDay = new Date(endDate);
+    let beginDateComparison: Date | null = null;
+    let endDateComparison: Date | null = null;
+
+    if (comparisonType === "monthly") {
+      beginDateComparison = new Date(startOfDay);
+      beginDateComparison.setMonth(beginDateComparison.getMonth() - 1);
+      
+      endDateComparison = new Date(endOfDay);
+      endDateComparison.setMonth(endDateComparison.getMonth() - 1);
+    }
+
+    // Préparation de la requête
+    const queryStats = db.select({
+      totalMembers: count(memberClubTable.id).mapWith(Number),
+      totalRevenue: sum(memberPaymentTable.amount).mapWith(Number),
+      pendingDocs: sql<number>`count(${memberDocumentTable.id}) filter (where ${memberDocumentTable.status} = 'pending')`.mapWith(Number)
+    })
+    .from(memberClubTable)
+    .leftJoin(memberPaymentTable, eq(memberClubTable.id, memberPaymentTable.membershipId))
+    .leftJoin(memberDocumentTable, eq(memberClubTable.id, memberDocumentTable.memberClubId))
+    .where(
+      and(
+        eq(memberClubTable.clubId, sql.placeholder('clubId')),
+        gte(memberClubTable.createdAt, sql.placeholder('start')),
+        lte(memberClubTable.createdAt, sql.placeholder('end'))
+        // Note: Si tu veux ajouter seasonId ici, il faut l'ajouter au placeholder
+      )
+    )
+    .prepare("get_stats");
+
+    // Exécution période actuelle
+    const [stats] = await queryStats.execute({
+      clubId: club_id,
+      start: startOfDay.toISOString(), 
+      end: endOfDay.toISOString()
+    });
+
+    let statsToCompare = { totalMembers: 0, totalRevenue: 0, pendingDocs: 0 };
+    if (beginDateComparison && endDateComparison) {
+      const [res] = await queryStats.execute({
+        clubId: club_id,
+        start: beginDateComparison.toISOString(),
+        end: endDateComparison.toISOString()
+      });
+      if (res) statsToCompare = res;
+    }
+
+    const calculatedStats = {
+      totalMembers: {
+        total: stats.totalMembers,
+        ...calculateTrend(stats.totalMembers, statsToCompare.totalMembers)
+      },
+      totalRevenue: {
+        total: stats.totalRevenue,
+        ...calculateTrend(stats.totalRevenue, statsToCompare.totalRevenue)
+      },
+      pendingDocs: {
+        total: stats.pendingDocs,
+        ...calculateTrend(stats.pendingDocs, statsToCompare.pendingDocs)
+      }
+    };
+
+    return c.json({ data: calculatedStats }, 200);
+  }
+)
 
 export type ClubRoutes = typeof clubRoutes;

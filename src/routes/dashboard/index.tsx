@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 
-export const Route = createFileRoute('/_dashboard/dashboard')({
+export const Route = createFileRoute('/dashboard/')({
   component: RouteComponent,
 })
 

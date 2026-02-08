@@ -4,7 +4,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {z} from "zod";
 import FieldInfo from "@/components/ui/FieldInfo.tsx";
 import {AlertCircleIcon, ArrowRightIcon, Eye, EyeOff, Lock, Mail, Star, Trophy, Users} from "lucide-react";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {Button} from "@/components/ui/button.tsx";
 import {authClient} from "@/lib/auth-client.ts";
 import {getFrenchTranslation} from "@/lib/translation.ts";
@@ -65,7 +65,7 @@ function RouteComponent() {
                         setSignInError("Veuillez verifier votre adresse mail");
                     }
                     else{
-                        setSignInError(getFrenchTranslation(error.code ?? ""))
+                        setSignInError(getFrenchTranslation(ctx.error.code ?? ctx.error.statusText ?? ""))
                     }
                 }
             })
@@ -75,6 +75,10 @@ function RouteComponent() {
             onBlur: register
         }
     })
+
+    useEffect(() => {
+        console.log(signInError)
+    }, [signInError])
 
   return (
     <>

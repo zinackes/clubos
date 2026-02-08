@@ -16,15 +16,16 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar'
 import { TeamSwitcher } from '@/components/ui/team-switcher'
+import { clubsQueryOptions } from '@/hooks/queries/club-queries'
 import { authClient } from '@/lib/auth-client'
 import { hasUserPermission } from '@/lib/permissions'
 import type { userRoleType } from '@/shared/types/UserRole'
 import { createFileRoute, Link, Outlet, redirect, Router, useNavigate } from '@tanstack/react-router'
 import { AudioWaveform, Baby, Calendar, Calendars, Command, CreditCard, FileText, GalleryVerticalEnd, House, LifeBuoy, LogOut, Settings, Shield, Trophy, User, Users } from 'lucide-react'
 
-export const Route = createFileRoute('/_dashboard')({
+export const Route = createFileRoute('/dashboard')({
   component: RouteComponent,
-  beforeLoad: ({ context, location}) => {
+  beforeLoad: ({ context, location, params}) => {
     if(!context.auth){
       throw redirect({
               to: '/login',
@@ -33,7 +34,12 @@ export const Route = createFileRoute('/_dashboard')({
               },
             });
     }
-  }
+  },
+  loader: ({ context: { queryClient, auth } }) => {
+    console.log("layout", typeof auth.user.id);
+    const userId = auth.user.id;
+    queryClient.ensureQueryData(clubsQueryOptions(userId))
+  },
 })
 
 function RouteComponent() {
@@ -91,7 +97,7 @@ function RouteComponent() {
                 </SidebarMenuButton>
                 <SidebarMenuButton asChild>
                   <Link
-                    to="/"
+                    to="/dashboard/clubs"
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}>
                     <Trophy/>
                     <span>Clubs</span>
@@ -233,13 +239,13 @@ function RouteComponent() {
             transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) md:rounded-tl-xl md:rounded-tr-xl'>
               <div className='flex w-full items-center gap-1 px-4 lg:gap-2'>
                 <SidebarTrigger className="-ml-1" />
-                <Separator orientation='vertical' className="!h-5"/>
+                <Separator orientation='vertical' className='!h-5'/>
                 <div className='lg:flex-1'>
 
                 </div>
                 <div className='ml-auto flex items-center gap-2'>
                   <Notification/>
-                  <Separator orientation='vertical' className="!h-5 mx-2"/>
+                  <Separator orientation='vertical' className='!h-5 mx-2'/>
                   <DropdownMenu>
                     <DropdownMenuTrigger>
                       <Avatar className="rounded-lg">
