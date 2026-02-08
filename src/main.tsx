@@ -61,7 +61,7 @@ function App() {
           queryClient: queryClient 
         }} 
       />
-      <Toaster />
+      <Toaster position='top-center'/>
     </QueryClientProvider>
   )
 }

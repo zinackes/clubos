@@ -1,0 +1,1 @@
+ALTER TABLE "club_invitation_link" ALTER COLUMN "is_archived" SET DEFAULT true;

@@ -1,3 +1,4 @@
+import type { ClubInvitationLinkDbType } from "@server/db/schema";
 import z from "zod";
 
 
@@ -11,3 +12,11 @@ export const clubInvitationCodeValidator = z.object({
 
 
 export type clubInvitationCodeType = z.infer<typeof clubInvitationCodeValidator>;
+
+
+export type ClubInvitationCodeDbAndStatsType = ClubInvitationLinkDbType & {
+  total_codes: number,
+  total_available_codes: number,
+  total_nearly_expired_codes: number,
+  total_expired_codes: number
+} 

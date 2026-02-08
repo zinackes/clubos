@@ -1,9 +1,9 @@
-import { ClubInvitationLinkDbType, clubInvitationLinkTable } from "@db/schema";
+import { ClubInvitationLinkDbType, clubInvitationLinkTable, clubInvitationLinkView } from "@db/schema";
 import { zValidator } from "@hono/zod-validator";
-import { clubInvitationCodeValidator } from "@shared/types/ClubInvitationLink";
+import { ClubInvitationCodeDbAndStatsType, clubInvitationCodeValidator } from "@shared/types/ClubInvitationLink";
 import { Hono } from "hono";
 import { db } from "src";
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getUniqueInviteCode } from "src/services/invitation.service";
 import { ApiResponseSuccess } from "@shared/types/ApiResponse";
 
@@ -33,7 +33,7 @@ export const invitationCodeRoutes = new Hono()
         }).returning();
 
         return c.json({
-            codeDb
+            data: codeDb
         });
 
     } catch (error) {
@@ -50,11 +50,28 @@ export const invitationCodeRoutes = new Hono()
             return c.json({ error: "L'id du club est manquant" }, 400);
         }
 
-        const invitations_codes = await db.query.clubInvitationLinkTable.findMany({
-            where: eq(clubInvitationLinkTable.clubId, club_id)
-        })
+        
+        const [invitationRows, statsRows] = await Promise.all([
+            db.select().from(clubInvitationLinkView).where(eq(clubInvitationLinkView.clubId, club_id)),
+    
+            db.select({
+                total_codes: sql<number>`count(*)`,
+                total_available_codes: sql<number>`count(*) filter (where is_active = true AND is_full = false)`,
+                total_nearly_expired_codes: sql<number>`count(*) filter (where is_nearly_expired = true)`,
+                total_expired_codes: sql<number>`count(*) filter (where is_expired = true)`
+            })
+            .from(clubInvitationLinkView)
+            .where(eq(clubInvitationLinkView.clubId, club_id))
+        ]);
+    
+        const stats = statsRows[0];
 
-        return c.json({ data: invitations_codes} satisfies ApiResponseSuccess<ClubInvitationLinkDbType[]>, 200);
+        return c.json({ data: invitationRows, stats: {
+            total_codes: Number(stats.total_codes),
+            total_available_codes: Number(stats.total_available_codes),
+            total_nearly_expired_codes: Number(stats.total_nearly_expired_codes),
+            total_expired_codes: Number(stats.total_expired_codes)
+        }}, 200);
 
     } catch (error) {
         console.error(error);

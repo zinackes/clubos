@@ -22,6 +22,6 @@ export const invitationsCodesQueryOptions = (clubId: string) =>
 
             const result = await res.json();
             
-            return result.data;
+            return result;
         }
 })

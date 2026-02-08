@@ -1,5 +1,4 @@
 import { columns } from '@/components/invitation_code/columns';
-import { DataTable } from '@/components/ui/table/data-table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import FieldInfo from '@/components/ui/FieldInfo';
@@ -8,14 +7,20 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { clubQueryOptions } from '@/hooks/queries/club-queries';
 import { invitationsCodesQueryOptions } from '@/hooks/queries/invitation_code-queries';
-import { useCreateInvitationCode } from '@/hooks/requests/useCreateInvitationCode';
+import { useCreateInvitationCode } from '@/hooks/requests/invitation_code/useCreateInvitationCode';
 import { cn } from '@/lib/utils';
 import { clubInvitationCodeValidator, type clubInvitationCodeType } from '@/shared/types/ClubInvitationLink';
 import { useForm } from '@tanstack/react-form';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
-import { CalendarDays, Plus } from 'lucide-react';
+import { Ban, CalendarDays, CircleCheck, Hourglass, Plus, QrCode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import type { ApiResponseSuccess } from '@/shared/types/ApiResponse';
+import type { ClubInvitationLinkDbType } from '@server/db/schema';
+import { createInvitationCodeFn } from '@/hooks/requests/invitation_code/createInvitationCode';
+import { DataTable } from '@/components/invitation_code/data-table';
 
 export const Route = createFileRoute(
   '/club/dashboard/$club_id/invitation_code',
@@ -36,8 +41,39 @@ function RouteComponent() {
 
   const { data: codes} = useSuspenseQuery(invitationsCodesQueryOptions(club_id));
 
+  const queryClient = useQueryClient();
 
-  const { mutate, error} =  useCreateInvitationCode();
+  const { mutate} =  useMutation({
+    mutationFn: createInvitationCodeFn,
+    onSuccess: (newdata : ApiResponseSuccess<ClubInvitationLinkDbType>) => {
+
+      toast.success("Succès ! Votre code à bien été créé");
+            
+      setOpenDialog(false);
+
+      const queryKey = invitationsCodesQueryOptions(club.id).queryKey;
+
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+
+        if(!oldData) return oldData;
+
+        const updatedData = [newdata.data, ...oldData.data];
+
+        const updatedStats = {
+          ...oldData.stats,
+          total_codes: oldData.stats.total_codes +1,
+          total_available_codes: oldData.stats.total_available_codes + 1,
+        };
+
+        return {
+          data: updatedData,
+          stats: updatedStats
+        }
+      })
+    }
+  });
+
+  const [openDialog, setOpenDialog] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -52,7 +88,10 @@ function RouteComponent() {
 
       console.log(club);
 
-      mutate({ data: values.value, club_id: club.id})
+      mutate({ data: values.value, club_id: club.id}
+      )
+
+
     },
     validators: {
       onSubmit: clubInvitationCodeValidator,
@@ -72,7 +111,7 @@ function RouteComponent() {
         <h1 className='font-title text-3xl font-bold'>
           Vos liens d'invitation
         </h1>
-        <Dialog>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
           <form 
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -246,8 +285,68 @@ function RouteComponent() {
         </Dialog>
       </div>
 
+      <div className='grid grid-cols-4 gap-5'>
+        <Card className='shadow-none'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+                <div className='p-2 bg-blue-100 rounded'>
+                    <QrCode className='text-blue-600' size={13}/>
+                </div>
+                <h4>Total de codes</h4>
+            </CardTitle>
+            <CardContent className='px-0 flex items-center gap-3'>
+              <p className='font-medium font-title text-3xl'>{codes.stats.total_codes}</p>
+            </CardContent>
+          </CardHeader>
+        </Card>
+
+        
+        <Card className='shadow-none'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+                <div className='p-2 bg-green-100 rounded'>
+                    <CircleCheck className='text-green-600' size={13}/>
+                </div>
+                <h4>Codes disponible</h4>
+            </CardTitle>
+            <CardContent className='px-0 flex items-center gap-3'>
+              <p className='font-medium font-title text-3xl'>{codes.stats.total_available_codes}</p>
+            </CardContent>
+          </CardHeader>
+        </Card>
+
+        
+        <Card className='shadow-none'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+                <div className='p-2 bg-amber-100 rounded'>
+                    <Hourglass className='text-amber-600' size={13}/>
+                </div>
+                <h4>Codes bientôt expiré</h4>
+            </CardTitle>
+            <CardContent className='px-0 flex items-center gap-3'>
+              <p className='font-medium font-title text-3xl'>{codes.stats.total_nearly_expired_codes}</p>
+            </CardContent>
+          </CardHeader>
+        </Card>
+        
+        <Card className='shadow-none'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+                <div className='p-2 bg-red-100 rounded'>
+                    <Ban className='text-red-600' size={13}/>
+                </div>
+                <h4>Codes expiré</h4>
+            </CardTitle>
+            <CardContent className='px-0 flex items-center gap-3'>
+              <p className='font-medium font-title text-3xl'>{codes.stats.total_expired_codes}</p>
+            </CardContent>
+          </CardHeader>
+        </Card>
+      </div>
+
       <div>
-        <DataTable data={codes} columns={columns}/>
+        <DataTable data={codes.data} columns={columns}/>
       </div>
     </div>
   )

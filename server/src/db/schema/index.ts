@@ -22,6 +22,7 @@ export const clubTable = clubSchema.clubTable;
 export const customFieldClub = clubSchema.customFieldClub;
 export const clubSeason = clubSchema.clubSeason;
 export const clubInvitationLinkTable = clubSchema.clubInvitationLinkTable;
+export const clubInvitationLinkView = clubSchema.clubInvitationLinkView;
 
 export const memberClubTable = memberSchema.memberClubTable;
 export const memberDocumentTable = memberSchema.memberDocumentTable;
@@ -101,4 +102,4 @@ export const memberCustomValueRelations = relations(memberCustomValueTable, ({ o
 }));
 
 
-export type ClubInvitationLinkDbType = InferSelectModel<typeof clubInvitationLinkTable>;
+export type ClubInvitationLinkDbType = typeof clubInvitationLinkView.$inferSelect;

@@ -1,6 +1,7 @@
-import { boolean, index, integer, pgEnum, pgSchema, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgSchema, pgTable, pgView, text, timestamp } from "drizzle-orm/pg-core";
 import { timestamps } from "../../utils/timestamps";
 import { user } from "./user-schema";
+import { sql } from "drizzle-orm";
 
 export const fieldTypeEnum = pgEnum("field_type_enum", ["text", "email", "boolean", "phone_number", "date", "integer", "file"]);
 
@@ -67,13 +68,42 @@ export const clubInvitationLinkTable = pgTable(
     expiry_date: timestamp("expiry_date"),
     max_uses: integer("max_uses"),
     uses: integer("uses").notNull().default(0),
-    is_active: boolean("is_active").notNull().default(true),
-    is_deleted: boolean("is_deleted").notNull().default(false),
-    is_expired: boolean("is_expired").notNull().default(false),
-    is_used: boolean("is_used").notNull().default(false),
+    is_archived: boolean("is_archived").notNull().default(false),
     code: text("code"),
     clubId: text("club_id").notNull().references(() => clubTable.id, { onDelete: "cascade"}),
     ...timestamps
   },
   (table) => [index("clubInvitationLink_clubId_idx").on(table.clubId)]
 )
+
+export const clubInvitationLinkView = pgView("club_invitation_link_view").as((qb) => {
+  return qb.select({
+      id: clubInvitationLinkTable.id,
+      label: clubInvitationLinkTable.label,
+      code: clubInvitationLinkTable.code,
+      expiry_date: clubInvitationLinkTable.expiry_date,
+      max_uses: clubInvitationLinkTable.max_uses,
+      uses: clubInvitationLinkTable.uses,
+      is_archived: clubInvitationLinkTable.is_archived,
+      clubId: clubInvitationLinkTable.clubId,
+
+      is_active: sql<boolean>`
+        (${clubInvitationLinkTable.expiry_date} IS NOT NULL AND ${clubInvitationLinkTable.expiry_date} > NOW())
+      `.as("is_active"),
+
+      is_expired: sql<boolean>`
+        (${clubInvitationLinkTable.expiry_date} IS NOT NULL AND ${clubInvitationLinkTable.expiry_date} < NOW())
+      `.as("is_expired"),
+
+      is_nearly_expired: sql<boolean>`
+      (${clubInvitationLinkTable.expiry_date} IS NOT NULL 
+       AND ${clubInvitationLinkTable.expiry_date} < NOW() 
+       AND ${clubInvitationLinkTable.expiry_date} >= NOW() + INTERVAL '3 days')
+    `.as("is_nearly_expired"),
+
+      is_full: sql<boolean>`
+        (${clubInvitationLinkTable.max_uses} > 0 AND ${clubInvitationLinkTable.uses} >= ${clubInvitationLinkTable.max_uses})
+      `.as("is_full"),
+
+  }).from(clubInvitationLinkTable);
+})
